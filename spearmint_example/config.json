@@ -1,0 +1,63 @@
+{
+    "experiment-name" : "digits100",
+    "language" : "PYTHON",
+    "likelihood" : "NOISELESS",
+    "main-file" : "xgb_digits100.py",
+    "resources" : {
+        "my-machine" : {
+            "max-concurrent" : 1,
+            "max-finished-jobs" : 20,
+            "scheduler" : "local"
+        }
+    },
+    "variables" : {
+        "colsample_bylevel" : {
+            "max" : 1,
+            "min" : 0.2,
+            "size" : 1,
+            "type" : "FLOAT"
+        },
+        "colsample_bytree" : {
+            "max" : 1,
+            "min" : 0.2,
+            "size" : 1,
+            "type" : "FLOAT"
+        },
+        "log_gamma" : {
+            "max" : 2.3026,
+            "min" : -4.6052,
+            "size" : 1,
+            "type" : "FLOAT"
+        },
+        "log_reg_lambda" : {
+            "max" : 2.3026,
+            "min" : -4.6052,
+            "size" : 1,
+            "type" : "FLOAT"
+        },
+        "lr_trees_ratio" : {
+            "max" : 20,
+            "min" : 1,
+            "size" : 1,
+            "type" : "FLOAT"
+        },
+        "max_depth" : {
+            "max" : 20,
+            "min" : 1,
+            "size" : 1,
+            "type" : "INT"
+        },
+        "n_estimators" : {
+            "max" : 300,
+            "min" : 50,
+            "size" : 1,
+            "type" : "INT"
+        },
+        "subsample" : {
+            "max" : 1,
+            "min" : 0.2,
+            "size" : 1,
+            "type" : "FLOAT"
+        }
+    }
+}
