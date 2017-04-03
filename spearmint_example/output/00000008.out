@@ -1,0 +1,13 @@
+Job launching after 0.13 seconds in submission.
+Running python job.
+Changed into dir /home/kc/Konrad/python/discopt/spearmint_example
+Importing xgb_digits100.py
+/usr/local/lib/python2.7/dist-packages/sklearn/cross_validation.py:44: DeprecationWarning: This module was deprecated in version 0.18 in favor of the model_selection module into which all the refactored classes and functions are moved. Also note that the interface of the new CV iterators are different from that of this module. This module will be removed in 0.20.
+  "This module will be removed in 0.20.", DeprecationWarning)
+Running xgb_digits100.main()
+Got result -0.170300530348
+Completed successfully in 1.82 seconds. [{u'main': -0.17030053034767237}]
+job_id 8
+{u'lr_trees_ratio': 20.0, u'colsample_bytree': 1.0, u'colsample_bylevel': 0.8214749097960361, u'log_gamma': 2.3026, u'n_estimators': 300, u'subsample': 0.70465109714970775, u'log_reg_lambda': 1.9955323517412813, u'max_depth': 20}
+parsed params {u'colsample_bytree': 1.0, u'colsample_bylevel': 0.8214749097960361, 'learning_rate': 0.066666666666666666, u'n_estimators': 300, u'subsample': 0.70465109714970775, u'reg_lambda': 7.356118027961041, u'max_depth': 20, u'gamma': 10.000149071170643}
+-0.170300530348 {u'colsample_bytree': 1.0, u'colsample_bylevel': 0.8214749097960361, 'learning_rate': 0.066666666666666666, u'n_estimators': 300, u'subsample': 0.70465109714970775, u'reg_lambda': 7.356118027961041, u'max_depth': 20, u'gamma': 10.000149071170643}

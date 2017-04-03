@@ -1,4 +1,3 @@
-import utils_xgb_main
 import xgboost as xgb
 import numpy as np
 import sklearn.datasets
@@ -66,9 +65,9 @@ ntrain = 100
 xtr, ytr, xval, yval = read_digits_tr_test_split(ntrain=ntrain)
 def obj_func(kwargs, verbose=1, n_jobs=n_jobs):
     # global xtr, ytr, xval, yval
-    kwargs = utils_xgb_main.xgb_parse_params(kwargs)
+    kwargs = xgb_parse_params(kwargs)
     print 'parsed params', kwargs
-    obj = -utils_xgb_main.clf_acc(xgb.sklearn.XGBClassifier(nthread=n_jobs, **kwargs), xtr, ytr, xval, yval)
+    obj = -clf_acc(xgb.sklearn.XGBClassifier(nthread=n_jobs, **kwargs), xtr, ytr, xval, yval)
     if verbose > 0:
         print obj, kwargs
     return obj
@@ -76,7 +75,7 @@ def obj_func(kwargs, verbose=1, n_jobs=n_jobs):
 
 def main(job_id, params):
     print 'job_id', job_id
-    params = utils_xgb_main.unpack_values(params)
+    params = unpack_values(params)
     print params
     obj = obj_func(params)
     return obj

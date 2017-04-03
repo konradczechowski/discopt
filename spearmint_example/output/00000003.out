@@ -1,0 +1,15 @@
+Job launching after 0.13 seconds in submission.
+Running python job.
+Changed into dir /home/kc/Konrad/python/discopt/spearmint_example
+Importing xgb_digits100.py
+Traceback (most recent call last):
+  File "/usr/local/lib/python2.7/dist-packages/spearmint/launcher.py", line 243, in launch
+    result = python_launcher(job)
+  File "/usr/local/lib/python2.7/dist-packages/spearmint/launcher.py", line 325, in python_launcher
+    module  = __import__(main_file)
+  File "/home/kc/Konrad/python/discopt/spearmint_example/xgb_digits100.py", line 1, in <module>
+    import utils_xgb_main
+ImportError: No module named utils_xgb_main
+Problem executing the function
+Job failed in 0.00 seconds.
+(<type 'exceptions.ImportError'>, ImportError('No module named utils_xgb_main',), <traceback object at 0x7f39896da950>)
