@@ -8,7 +8,8 @@ import scipy
 from scipy import stats
 
 def cut_space(space, scores, ignore=0.5):
-    # cuts from each dimention of space part not used in relatively good parameter combinations
+    # overwrites values in space!
+    # cuts from each dimension part not used in relatively good parameters combinations
     # much place for improvement here
     names = space.keys()
     good_scores = scores.sort_values('obj')[:int(scores.shape[0] * (1-ignore))]
