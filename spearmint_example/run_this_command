@@ -1,0 +1,2 @@
+# first path is to spearmint main.py file (you must change it), second is path to folder with config, and code
+python .../../hyperparams_opt/src/Spearmint/spearmint/main.py .
