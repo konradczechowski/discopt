@@ -173,9 +173,10 @@ def prepare_params_order(space):
 
 
 def get_best_params(scores):
-    best_params = copy.deepcopy(scores.iloc[scores.obj.argmax()])
+    best_params = copy.deepcopy(scores.iloc[scores.obj.argmin()])
     del best_params['obj']
     return xgb_parse_params(dict(best_params))
+
 
 def search_params_for_xgb(train_valid_func, train_data_shape, ntrials=200, n_jobs=1, verbose=False, **discopt_kwargs):
     space = prepare_xgb_space(train_data_shape)
