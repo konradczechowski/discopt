@@ -137,7 +137,7 @@ def xgb_parse_params(kwargs):
 
 
 def min_sample_required(train_data_shape):
-    eps = 1e-7
+    eps = 1e-3
     nrow, ncol = train_data_shape
     inv_col = 1. / ncol
     cs_min = inv_col ** 0.5 + eps
