@@ -41,14 +41,14 @@ def sample_positive_class(clf, space, params_order, scores, verbose=False):
         sample = sample_from_space(space=space,size=sample_size)
         pred = clf.predict_proba(sample[params_order])[:,1]
         positive = pred>0.5
-        if verbose: print 'positive freq', positive.mean()
+        if verbose: print('positive freq', positive.mean())
         if positive.sum() == 0:
             sample_size *= 2
-            if verbose: print 'not found positive example, increasing sample size to {}'.format(sample_size)
+            if verbose: print('not found positive example, increasing sample size to {}'.format(sample_size))
         else:
             ret = sample.loc[positive,:].iloc[0,:]
             return ret
-    if verbose: print 'not found positive sample, the best value is chosen, space will be cut'
+    if verbose: print('not found positive sample, the best value is chosen, space will be cut')
     cut_space(space, scores)
     return sample.iloc[pred.argmax(),:]
 
@@ -69,7 +69,7 @@ def find_candidate(scores, space, params_order, new=0.2, best=0.5, worse=0.5, cl
     train = scores_sorted.loc[scores_sorted.index.isin(list(best_params)+list(new_params)),:].copy()
     
     assert train.shape[0] >= 2
-    print 'best objective yet', train.obj.iloc[-1]
+    print('best objective yet {}'.format(train.obj.iloc[-1]))
     #print 'worse', train.obj.iloc[0],'middle', train.obj.iloc[train.shape[0]/2], 'best', train.obj.iloc[-1]
     del train['obj']
     target = pd.Series(1,index=train.index)
@@ -83,6 +83,7 @@ def search_min(obj_func, space, nrep=100,ninit=5, new=1., best=1., worse=0.7, n_
     space = copy.deepcopy(space)
     params_order = sorted(space.keys())
     # space may be changed inside of
+    print('running random initial parameters combinations')
     scores = sample_from_space(space=space, size=ninit)
     scores['obj'] = 0
     assert scores.iloc[:,-1].name == 'obj'
@@ -91,11 +92,11 @@ def search_min(obj_func, space, nrep=100,ninit=5, new=1., best=1., worse=0.7, n_
         scores.iloc[ix,-1] = obj_func(dict(scores.iloc[ix,:-1]))
     # search
     for i in range(nrep):
-        if verbose: print i
+        if verbose: print(i)
         candidate = find_candidate(scores, space, params_order, new=new, best=best, worse=worse, 
                                    clf=ExtraTreesClassifier(n_estimators=100, n_jobs=n_jobs))
         candidate['obj'] = obj_func(dict(candidate))
-        if verbose: print '(negative) new_obj', -candidate['obj'], dict(candidate), '\n'
+        if verbose: print('(negative) new_obj', -candidate['obj'], dict(candidate), '\n')
         scores = scores.append(candidate,ignore_index=True)
     return scores
 
@@ -103,15 +104,16 @@ def search_min(obj_func, space, nrep=100,ninit=5, new=1., best=1., worse=0.7, n_
 def scipy_uniform(min, max):
     return scipy.stats.uniform(min, max - min)
 
+# the subsample, and colsamples will get overwriten
 DEFAULT_SPACE_SCIPY = {
     'max_depth': stats.randint(1, 21),
     'lr_trees_ratio': scipy_uniform(2,10),
     'n_estimators': stats.randint(50, 301),
     'log_gamma': scipy_uniform(np.log(0.01), np.log(10)),
     'log_reg_lambda': scipy_uniform(np.log(0.01), np.log(10)),
-    'subsample': scipy_uniform(0.2, 1),
-    'colsample_bylevel': scipy_uniform(0.2, 1),
-    'colsample_bytree': scipy_uniform(0.2, 1),
+    'subsample': 'data_dependant',#scipy_uniform(0.2, 1),
+    'colsample_bylevel': 'data_dependant',#scipy_uniform(0.2, 1),
+    'colsample_bytree': 'data_dependant',#scipy_uniform(0.2, 1),
 }
 
 
@@ -144,6 +146,7 @@ def min_sample_required(train_data_shape):
     inv_row = 1. / nrow
     ss_min = inv_row + eps
     return cs_min, ss_min
+
 
 def prepare_xgb_space(train_data_shape, min_sampling_based_on_shape=True):
     space = copy.deepcopy(DEFAULT_SPACE_SCIPY)
