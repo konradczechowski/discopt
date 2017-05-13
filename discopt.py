@@ -157,6 +157,7 @@ def prepare_xgb_space(train_data_shape, min_sampling_based_on_shape=True):
         cs_min, ss_min = min_sample_required(train_data_shape)
         space['colsample_bylevel'] = scipy_uniform(cs_min, 1)
         space['colsample_bytree'] = scipy_uniform(cs_min, 1)
+        ss_min = max(0.2, ss_min) # TODO shouldn't row subsample data dependency be removed at all?
         space['subsample'] = scipy_uniform(ss_min, 1)
     return space
 
@@ -186,7 +187,7 @@ def search_params_for_xgb(train_valid_func, train_data_shape, ntrials=200, n_job
     obj_func = prepare_xgb_obj_func(train_valid_func, n_jobs)
 
     scores = search_min(obj_func, space,
-                        nrep=ntrials,n_jobs=n_jobs, verbose=verbose,
+                        nrep=ntrials, n_jobs=n_jobs, verbose=verbose,
                         **discopt_kwargs
                         )
     best_params = get_best_params(scores)
