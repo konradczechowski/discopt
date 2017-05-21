@@ -13,29 +13,33 @@ def cut_space(space, scores, ignore=0.5):
     # much place for improvement here
     names = space.keys()
     good_scores = scores.sort_values('obj')[:int(scores.shape[0] * (1-ignore))]
-    for name in names:#dist in space_scipy.items():
+    for name in names:
         dist = space[name]
         min_val = good_scores[name].min()
         max_val = good_scores[name].max()
         # check type of variable
-        if isinstance(dist.dist,stats._continuous_distns.uniform_gen):
+        if isinstance(dist.dist, stats._continuous_distns.uniform_gen):
             new_dist = scipy_uniform(min_val, max_val)
-        elif isinstance(dist.dist,stats._discrete_distns.randint_gen):
+        elif isinstance(dist.dist, stats._discrete_distns.randint_gen):
             new_dist = stats.randint(min_val, max_val + 1)
         else:
-            raise ValueError('type of distribution is unknown: {}'.format(type(dist)))
+            pass #raise ValueError('type of distribution is unknown: {}'.format(type(dist)))
         # overwrite distribution
         space[name] = new_dist
 
 
-def sample_from_space(space,size=1):
+def sample_from_space(space, size=1):
     sample = pd.DataFrame(columns = space.keys(), index=range(size))
     for key, distr in space.items():
-        sample[key] = distr.rvs(size=size)
+        if hasattr(distr, "rvs"):
+            sample[key] = distr.rvs(size=size)
+        else:
+            sample[key] = np.random.choice(distr)
     return sample
 
 
-def sample_positive_class(clf, space, params_order, scores, verbose=False):
+def sample_positive_class(clf, space, scores, params_order=None, verbose=False):
+    params_order = params_order if params_order else prepare_params_order(space)
     sample_size = 100
     for i in range(4):
         sample = sample_from_space(space=space,size=sample_size)
@@ -53,13 +57,15 @@ def sample_positive_class(clf, space, params_order, scores, verbose=False):
     return sample.iloc[pred.argmax(),:]
 
 
-def find_candidate(scores, space, params_order, new=0.2, best=0.5, worse=0.5, clf = ExtraTreesClassifier(n_estimators=100, n_jobs=4)):
-    
+def find_candidate(scores, space, params_order, new=1., best=1., worse=0.7, random=False, clf=ExtraTreesClassifier(n_estimators=100, n_jobs=4)):
     # prepare train sample sorted by objective, get all observations which are new or best
+    params_order = params_order if params_order else prepare_params_order(space)
+    if random:
+        return sample_from_space(space).iloc[0, :]
     scores = scores.copy()
     n = scores.shape[0]
     nnew = int(new*n)
-    if nnew >0:
+    if nnew > 0:
         new_params = scores.iloc[-nnew:,:].index
     else:
         new_params = scores.index[:0] # empty index
@@ -69,35 +75,33 @@ def find_candidate(scores, space, params_order, new=0.2, best=0.5, worse=0.5, cl
     train = scores_sorted.loc[scores_sorted.index.isin(list(best_params)+list(new_params)),:].copy()
     
     assert train.shape[0] >= 2
-    print('best objective yet {}'.format(train.obj.iloc[-1]))
+
     #print 'worse', train.obj.iloc[0],'middle', train.obj.iloc[train.shape[0]/2], 'best', train.obj.iloc[-1]
     del train['obj']
     target = pd.Series(1,index=train.index)
     target[:int(target.size * worse)] = 0
     assert target.nunique() > 1
     clf.fit(train[params_order], target)
-    return sample_positive_class(clf, space,params_order, scores)
+    return sample_positive_class(clf, space, scores, params_order)
 
 
 def search_min(obj_func, space, nrep=100,ninit=5, new=1., best=1., worse=0.7, n_jobs=4, verbose=False):
+    # space may get changed (pruned) during function execution
     space = copy.deepcopy(space)
-    params_order = sorted(space.keys())
-    # space may be changed inside of
-    print('running random initial parameters combinations')
-    scores = sample_from_space(space=space, size=ninit)
-    scores['obj'] = 0
-    assert scores.iloc[:,-1].name == 'obj'
-    # init with random trials
-    for ix in range(scores.shape[0]):
-        scores.iloc[ix,-1] = obj_func(dict(scores.iloc[ix,:-1]))
-    # search
+    params_order = prepare_params_order(space)
+    scores = pd.DataFrame(columns=params_order)
+    best_objective = np.inf
     for i in range(nrep):
         if verbose: print(i)
+        random_candidate = i < ninit
         candidate = find_candidate(scores, space, params_order, new=new, best=best, worse=worse, 
-                                   clf=ExtraTreesClassifier(n_estimators=100, n_jobs=n_jobs))
-        candidate['obj'] = obj_func(dict(candidate))
+                                   random=random_candidate, clf=ExtraTreesClassifier(n_estimators=100, n_jobs=n_jobs))
+        new_obj = obj_func(dict(candidate))
+        candidate['obj'] = new_obj
         if verbose: print('(negative) new_obj', -candidate['obj'], dict(candidate), '\n')
-        scores = scores.append(candidate,ignore_index=True)
+        scores = scores.append(candidate, ignore_index=True)
+        best_objective = min(new_obj, best_objective)
+        print('best objective yet {}'.format(best_objective))
     return scores
 
 
@@ -107,7 +111,7 @@ def scipy_uniform(min, max):
 # the subsample, and colsamples will get overwriten
 DEFAULT_SPACE_SCIPY = {
     'max_depth': stats.randint(1, 21),
-    'lr_trees_ratio': scipy_uniform(2,10),
+    'lr_trees_ratio': scipy_uniform(2, 10),
     'n_estimators': stats.randint(50, 301),
     'log_gamma': scipy_uniform(np.log(0.01), np.log(10)),
     'log_reg_lambda': scipy_uniform(np.log(0.01), np.log(10)),
