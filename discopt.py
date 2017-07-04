@@ -18,12 +18,17 @@ def cut_space(space, scores, ignore=0.5):
         min_val = good_scores[name].min()
         max_val = good_scores[name].max()
         # check type of variable
-        if isinstance(dist.dist, stats._continuous_distns.uniform_gen):
-            new_dist = scipy_uniform(min_val, max_val)
-        elif isinstance(dist.dist, stats._discrete_distns.randint_gen):
-            new_dist = stats.randint(min_val, max_val + 1)
+        if isinstance(dist, np.ndarray):
+            mask = (dist <= max_val) & (dist >= min_val)
+            new_dist = dist[mask]
+        elif hasattr(dist, 'dist'):
+            # scipy.stats object
+            if isinstance(dist.dist, stats._continuous_distns.uniform_gen):
+                new_dist = scipy_uniform(min_val, max_val)
+            elif isinstance(dist.dist, stats._discrete_distns.randint_gen):
+                new_dist = stats.randint(min_val, max_val + 1)
         else:
-            pass #raise ValueError('type of distribution is unknown: {}'.format(type(dist)))
+            new_dist = dist #raise ValueError('type of distribution is unknown: {}'.format(type(dist)))
         # overwrite distribution
         space[name] = new_dist
 
@@ -68,7 +73,7 @@ def find_candidate(scores, space, params_order, new=1., best=1., worse=0.7, rand
     if nnew > 0:
         new_params = scores.iloc[-nnew:,:].index
     else:
-        new_params = scores.index[:0] # empty index
+        new_params = scores.index[:0]  # empty index
     scores_sorted = scores.sort_values(by='obj', ascending=False)
     nbest = max(2, int(best*n)) # at least 2 examples are needed for training classifier
     best_params = scores_sorted.iloc[-nbest:,:].index
