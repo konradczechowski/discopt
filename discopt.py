@@ -43,7 +43,7 @@ def sample_from_space(space, size=1):
     return sample
 
 
-def sample_positive_class(clf, space, scores, params_order=None, verbose=False):
+def sample_positive_class(clf, space, scores, params_order=None, verbose=False, space_cut_enabled=True):
     params_order = params_order if params_order else prepare_params_order(space)
     sample_size = 100
     for i in range(4):
@@ -58,11 +58,13 @@ def sample_positive_class(clf, space, scores, params_order=None, verbose=False):
             ret = sample.loc[positive,:].iloc[0,:]
             return ret
     if verbose: print('not found positive sample, the best value is chosen, space will be cut')
-    cut_space(space, scores)
+    if space_cut_enabled:
+        cut_space(space, scores)
     return sample.iloc[pred.argmax(),:]
 
 
-def find_candidate(scores, space, params_order, new=1., best=1., worse=0.7, random=False, clf=ExtraTreesClassifier(n_estimators=100, n_jobs=4)):
+def find_candidate(scores, space, params_order, new=1., best=1., worse=0.7, random=False,
+                   clf=ExtraTreesClassifier(n_estimators=100, n_jobs=4), space_cut_enabled=True):
     # prepare train sample sorted by objective, get all observations which are new or best
     params_order = params_order if params_order else prepare_params_order(space)
     if random:
@@ -78,16 +80,14 @@ def find_candidate(scores, space, params_order, new=1., best=1., worse=0.7, rand
     nbest = max(2, int(best*n)) # at least 2 examples are needed for training classifier
     best_params = scores_sorted.iloc[-nbest:,:].index
     train = scores_sorted.loc[scores_sorted.index.isin(list(best_params)+list(new_params)),:].copy()
-    
     assert train.shape[0] >= 2
 
-    #print 'worse', train.obj.iloc[0],'middle', train.obj.iloc[train.shape[0]/2], 'best', train.obj.iloc[-1]
     del train['obj']
     target = pd.Series(1,index=train.index)
     target[:int(target.size * worse)] = 0
     assert target.nunique() > 1
     clf.fit(train[params_order], target)
-    return sample_positive_class(clf, space, scores, params_order)
+    return sample_positive_class(clf, space, scores, params_order, space_cut_enabled=space_cut_enabled)
 
 
 def search_min(obj_func, space, nrep=100,ninit=5, new=1., best=1., worse=0.7, n_jobs=4, verbose=False):
